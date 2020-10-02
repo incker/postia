@@ -236,27 +236,6 @@
     document.querySelector('.btn-clean').onclick = clean;
 
 
-    const targetDiv = document.body.querySelector('.image');
-
-    /*
-    https://emojipedia.org/apple/
-    https://emojipedia.org/twitter/twemoji-13.0.1/
-     */
-
-    document.querySelector('.btn-download').onclick = () => {
-        window.scrollTo(0, 0);
-        html2canvas(targetDiv, {
-            windowWidth: targetDiv.scrollWidth,
-            windowHeight: targetDiv.scrollHeight
-        }).then((canvas) => {
-            const link = document.createElement('a');
-            link.download = 'result.jpg';
-            link.href = canvas.toDataURL('image/jpeg', 1.0)
-            link.click();
-        });
-    }
-
-
     const textBlock = document.querySelector('.text-block');
 
 
@@ -313,9 +292,8 @@
 
 </script>
 
-
 <script src="html2canvas.js"></script>
-
+<script src="download.js"></script>
 
 <div class="flex-column">
     <a href="https://www.instagram.com/explore/tags/blueberrysmoothie/">inst blueberrysmoothie</a>
