@@ -174,10 +174,18 @@
 
     const apply = () => {
         const lines = [[]];
+
+        let lastIsNode = true;
         for (const node of editableDiv.childNodes) {
             if (isTextNode(node)) {
-                lines[0].push(node.cloneNode(true))
+                if (lastIsNode) {
+                    lines[lines.length -1].push(node.cloneNode(true))
+                } else {
+                    lines.push([node.cloneNode(true)])
+                    lastIsNode = true;
+                }
             } else {
+                lastIsNode = false;
                 if (node.tagName.toLowerCase() === 'img') {
                     lines[0].push(node.cloneNode(true))
                 } else {
