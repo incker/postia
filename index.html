@@ -107,6 +107,7 @@
                 selectElem.onkeydown = onkeydown;
             });
         })((e) => {
+            // todo Backspace
             if (e.key === 'Enter') {
                 e.preventDefault();
                 const div = e.target;
@@ -219,32 +220,6 @@
     }
 
 
-    const apply = () => {
-        const lines = [[]];
-
-        let lastIsNode = true;
-        for (const node of editableDiv.childNodes) {
-            if (isTextNode(node)) {
-                if (lastIsNode) {
-                    lines[lines.length - 1].push(node.cloneNode(true))
-                } else {
-                    lines.push([node.cloneNode(true)])
-                    lastIsNode = true;
-                }
-            } else {
-                lastIsNode = false;
-                if (node.tagName.toLowerCase() === 'img') {
-                    lines[0].push(node.cloneNode(true))
-                } else {
-                    lines.push(Array.from(node.cloneNode(true).childNodes))
-                }
-            }
-        }
-        apply2(lines)
-
-    }
-
-
     const isTextNode = (node) => {
         switch (node.nodeType) {
             case 3: // text node
@@ -258,24 +233,8 @@
     }
 
 
-    const apply2 = (lines) => {
-        const textBlock = document.querySelector('.text-block');
-        textBlock.textContent = "";
-        for (const line of lines) {
-            const lineDiv = Object.assign(document.createElement('div'), {
-                className: 'line'
-            });
-            for (const el of line) {
-                lineDiv.appendChild(el);
-            }
-            textBlock.appendChild(lineDiv)
-        }
-        console.log(lines)
-    }
-
-
     document.querySelector('.btn-clean').onclick = clean;
-    document.querySelector('.btn-apply').onclick = apply;
+
 
     const targetDiv = document.body.querySelector('.image');
 
