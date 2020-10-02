@@ -33,14 +33,8 @@
     <div class="image">
         <img src="mmm.jpg">
         <div class="text-block" style="left: 58px; top: 112px; align-items: flex-start; font-size: 46px;">
-            <div class="line">
-                Что делать если у
-            </div>
-            <div class="line">
-                тебя украли <img class="smile" src="test.png">
-            </div>
-            <div class="line">
-                телефон
+            <div class="line editable-div">
+                текст
             </div>
         </div>
     </div>
@@ -88,7 +82,60 @@
 
 
 <script>
+    const createLine = () => Object.assign(document.createElement('div'), {
+        className: 'line editable-div',
+    });
+
+    const insertAfter = (newElem, refElem) => {
+        const nextNode = refElem.nextElementSibling;
+        console.log('nextNode');
+        console.log(nextNode);
+        if (nextNode) {
+            console.log('before');
+            nextNode.parentElement.insertBefore(newElem, refElem);
+        } else {
+            console.log('append');
+            refElem.parentElement.appendChild(newElem);
+        }
+        return newElem;
+    }
+
+    const doDirt = () => {
+
+        ((onkeydown) => {
+            document.querySelectorAll('.line.editable-div').forEach((selectElem) => {
+                selectElem.onkeydown = onkeydown;
+            });
+        })((e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const div = e.target;
+                console.log(div)
+                console.log(div)
+                console.log(div)
+                const line = createLine();
+                insertAfter(line, div);
+                doDirt();
+                line.focus();
+            }
+        });
+
+
+        ((oninput) => {
+            document.querySelectorAll('.line.editable-div').forEach((selectElem) => {
+                selectElem.oninput = oninput;
+            });
+        })((e) => {
+            const div = e.target;
+            console.log(e)
+        });
+
+
+    }
+    doDirt();
+
     const smilePiker = document.querySelector('.smile-piker');
+
 
     (() => {
         smilePiker.textContent = '';
@@ -102,11 +149,12 @@
     })()
 
     smilePiker.onclick = (e) => {
-        const img = Object.assign(document.createElement('img'), {
+        const smile = Object.assign(document.createElement('img'), {
             className: 'smile',
             src: e.target.src
         })
-        editableDiv.appendChild(img);
+        // editableDiv.appendChild(img);
+        pasteSmile(smile)
     }
 
 
@@ -119,7 +167,6 @@
 
 
 <script>
-    d = [];
     const editableDiv = document.body.querySelector('.editable-div');
 
     const pasteSmile = (smile) => {
@@ -127,18 +174,19 @@
         const anchorNode = selection.anchorNode;
 
         if (isTextNode(anchorNode)) {
-
-            // todo
+            const textNodeAfter = document.createTextNode(anchorNode.textContent.substr(selection.anchorOffset));
+            anchorNode.textContent = anchorNode.textContent.substr(0, selection.anchorOffset);
+            insertAfter(smile, anchorNode);
+            insertAfter(textNodeAfter, smile);
+            // todo selection
         } else {
-            const nextNode = anchorNode.nextSibling;
-            if (nextNode) {
-                nextNode.parentElement.insertBefore(nextNode, smile);
+            if (anchorNode.classList.contains('line')) {
+                anchorNode.appendChild(smile);
             } else {
-                anchorNode.parentElement.appendChild(smile);
+                console.error(anchorNode);
+                throw 'WTF';
             }
         }
-
-
     }
 
 
@@ -158,7 +206,6 @@
                         continue;
                     }
                     console.log(innerElem)
-                    d.push(innerElem)
                     elem.insertBefore(document.createTextNode(innerElem.textContent), innerElem)
                     innerElem.remove();
                 }
@@ -179,7 +226,7 @@
         for (const node of editableDiv.childNodes) {
             if (isTextNode(node)) {
                 if (lastIsNode) {
-                    lines[lines.length -1].push(node.cloneNode(true))
+                    lines[lines.length - 1].push(node.cloneNode(true))
                 } else {
                     lines.push([node.cloneNode(true)])
                     lastIsNode = true;
