@@ -96,6 +96,16 @@
         return newElem;
     }
 
+    const splitLines = (line, donorLine) => {
+        donorLine.remove();
+        const fragment = document.createDocumentFragment();
+        // Способ nextLine.childNodes.forEach работает не верно, так как итерируемые элементы удаляются
+        while (donorLine.firstChild) {
+            fragment.appendChild(donorLine.firstChild)
+        }
+        line.appendChild(fragment);
+    }
+
     const doDirt = () => {
 
         ((onkeydown) => {
@@ -118,11 +128,7 @@
                     const prevLine = line.previousElementSibling;
                     if (prevLine) {
                         const focusElem = prevLine.lastChild;
-
-                        // Способ nextLine.childNodes.forEach работает не верно, так как итерируемые элементы удаляются
-                        [...line.childNodes].forEach((node) => {
-                            prevLine.appendChild(node);
-                        });
+                        splitLines(prevLine, line)
 
                         prevLine.focus();
                         const range = document.createRange();
@@ -132,9 +138,6 @@
                         selection.removeAllRanges()
                         selection.addRange(range)
                         prevLine.normalize();
-
-                        line.remove();
-
                     }
                 }
                 // line.focus();
@@ -156,17 +159,11 @@
 
                     const nextLine = line.nextElementSibling;
                     if (nextLine) {
-                        nextLine.remove();
-                        // Способ nextLine.childNodes.forEach работает не верно, так как итерируемые элементы удаляются
-                        [...nextLine.childNodes].forEach((node) => {
-                            console.log('----------')
-                            console.log(node)
-                            line.appendChild(node);
-                            console.log(node)
-                        })
+                        splitLines(line, nextLine);
                     }
                 }
             }
+
 
             if (e.key === 'Enter') {
                 e.preventDefault();
