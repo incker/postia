@@ -44,7 +44,6 @@
             <input class="input-font-size" type="number" value="46">
         </label>
 
-
         <div>
             <button class="btn-align" data-align="flex-start">
                 start
@@ -57,7 +56,6 @@
             </button>
         </div>
 
-
         <div>
             <button class="btn-clean">
                 clean
@@ -67,7 +65,6 @@
             </button>
         </div>
 
-
         <div class="editable-div" contenteditable="true">
             Этот текст может быть отредактирован пользователем.
         </div>
@@ -75,7 +72,6 @@
         <div class="smile-piker">
             <img class="smile-icon" src="emojipedia/apple/0000.jpg">
         </div>
-
 
     </div>
 </div>
@@ -92,7 +88,7 @@
         console.log(nextNode);
         if (nextNode) {
             console.log('before');
-            nextNode.parentElement.insertBefore(newElem, refElem);
+            nextNode.parentElement.insertBefore(newElem, nextNode);
         } else {
             console.log('append');
             refElem.parentElement.appendChild(newElem);
@@ -107,7 +103,71 @@
                 selectElem.onkeydown = onkeydown;
             });
         })((e) => {
-            // todo Backspace
+            console.log(e);
+            console.log(e.key);
+            if (e.key === 'Backspace') {
+                const selection = window.getSelection();
+                const anchorNode = selection.anchorNode;
+                console.log(selection)
+                console.log(anchorNode)
+
+                if ((anchorNode === e.target || !anchorNode.previousSibling) && selection.anchorOffset === 0) {
+                    console.log('todo');
+                    e.preventDefault();
+                    const line = e.target;
+                    const prevLine = line.previousElementSibling;
+                    if (prevLine) {
+                        const focusElem = prevLine.lastChild;
+
+                        // Способ nextLine.childNodes.forEach работает не верно, так как итерируемые элементы удаляются
+                        [...line.childNodes].forEach((node) => {
+                            prevLine.appendChild(node);
+                        });
+
+                        prevLine.focus();
+                        const range = document.createRange();
+                        range.setStart(focusElem, focusElem.textContent.length);
+                        range.setEnd(focusElem, focusElem.textContent.length);
+
+                        selection.removeAllRanges()
+                        selection.addRange(range)
+                        prevLine.normalize();
+
+                        line.remove();
+
+                    }
+                }
+                // line.focus();
+            }
+
+            if (e.key === 'Delete') {
+                const selection = window.getSelection();
+                const anchorNode = selection.anchorNode;
+
+                // чинит то что последний текстовый элемент может быть "" и все стопорить
+                // e.target.normalize();
+
+                const bool2 = isTextNode(anchorNode) && !anchorNode.nextSibling && anchorNode.textContent.length === selection.anchorOffset;
+
+                if ((anchorNode === e.target && selection.anchorOffset !== 0) || bool2) {
+                    console.log('Delete LINE');
+                    e.preventDefault();
+                    const line = e.target;
+
+                    const nextLine = line.nextElementSibling;
+                    if (nextLine) {
+                        nextLine.remove();
+                        // Способ nextLine.childNodes.forEach работает не верно, так как итерируемые элементы удаляются
+                        [...nextLine.childNodes].forEach((node) => {
+                            console.log('----------')
+                            console.log(node)
+                            line.appendChild(node);
+                            console.log(node)
+                        })
+                    }
+                }
+            }
+
             if (e.key === 'Enter') {
                 e.preventDefault();
                 const div = e.target;
@@ -171,7 +231,7 @@
     const editableDiv = document.body.querySelector('.editable-div');
 
     const pasteSmile = (smile) => {
-        const selection = window.getSelection()
+        const selection = window.getSelection();
         const anchorNode = selection.anchorNode;
 
         if (isTextNode(anchorNode)) {
