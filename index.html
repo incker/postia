@@ -83,14 +83,10 @@
     });
 
     const insertAfter = (newElem, refElem) => {
-        const nextNode = refElem.nextElementSibling;
-        console.log('nextNode');
-        console.log(nextNode);
+        const nextNode = refElem.nextSibling;
         if (nextNode) {
-            console.log('before');
             nextNode.parentElement.insertBefore(newElem, nextNode);
         } else {
-            console.log('append');
             refElem.parentElement.appendChild(newElem);
         }
         return newElem;
@@ -129,14 +125,12 @@
                     e.preventDefault();
                     const prevLine = line.previousElementSibling;
                     if (prevLine) {
-                        const focusElem = prevLine.lastChild;
+                        const focusElem = prevLine.appendChild(document.createTextNode(''));
                         splitLines(prevLine, line)
-
                         prevLine.focus();
                         const range = document.createRange();
-                        range.setStart(focusElem, focusElem.textContent.length);
-                        range.setEnd(focusElem, focusElem.textContent.length);
-
+                        range.setStart(focusElem, 0);
+                        range.setEnd(focusElem, 0);
                         selection.removeAllRanges()
                         selection.addRange(range)
                         prevLine.normalize();
@@ -163,14 +157,17 @@
                 const newLine = createLine();
                 if (isTextNode(anchorNode)) {
                     if (anchorNode.textContent.length !== selection.anchorOffset) {
-                        newLine.appendChild(document.createTextNode(anchorNode.textContent.substr(selection.anchorOffset)));
+                        fragment.appendChild(document.createTextNode(anchorNode.textContent.substr(selection.anchorOffset)));
                         anchorNode.textContent = anchorNode.textContent.substr(0, selection.anchorOffset)
                     }
                     while (anchorNode.nextSibling) {
                         fragment.appendChild(anchorNode.nextSibling)
                     }
-                } else if (anchorNode === e.target) {
+                } else if (anchorNode === line) {
                     if (selection.anchorOffset === 0) {
+                        while (line.firstChild) {
+                            fragment.appendChild(line.firstChild)
+                        }
                     } else {
                         const dividerElem = anchorNode.childNodes[selection.anchorOffset - 1];
                         while (dividerElem.nextSibling) {
@@ -186,7 +183,7 @@
             }
         });
 
-
+        // todo onpaste instead oninput??
         ((oninput) => {
             document.querySelectorAll('.line.editable-div').forEach((selectElem) => {
                 selectElem.oninput = oninput;
@@ -195,7 +192,6 @@
             const line = e.target;
             console.log(e)
         });
-
 
     }
     doDirt();
@@ -237,21 +233,46 @@
     const pasteSmile = (smile) => {
         const selection = window.getSelection();
         const anchorNode = selection.anchorNode;
+        const line = (() => {
+            const line = isTextNode(anchorNode) ? anchorNode.parentElement : anchorNode;
+            if (!line.classList.contains('line')) {
+                throw 'wtf'
+            }
+            return line;
+        })();
 
         if (isTextNode(anchorNode)) {
-            const textNodeAfter = document.createTextNode(anchorNode.textContent.substr(selection.anchorOffset));
             anchorNode.textContent = anchorNode.textContent.substr(0, selection.anchorOffset);
-            insertAfter(smile, anchorNode);
-            insertAfter(textNodeAfter, smile);
-            // todo selection
+            const fragment = document.createDocumentFragment();
+            fragment.appendChild(smile);
+            fragment.appendChild(document.createTextNode(anchorNode.textContent.substr(selection.anchorOffset)));
+            insertAfter(fragment, anchorNode);
         } else {
-            if (anchorNode.classList.contains('line')) {
-                anchorNode.appendChild(smile);
+            if (anchorNode === line) {
+                if (selection.anchorOffset === 0) {
+                    if (line.firstChild) {
+                        line.insertBefore(smile, line.firstChild);
+                    } else {
+                        anchorNode.appendChild(smile);
+                    }
+                } else {
+                    const dividerElem = anchorNode.childNodes[selection.anchorOffset - 1];
+                    insertAfter(smile, dividerElem);
+                }
             } else {
                 console.error(anchorNode);
                 throw 'WTF';
             }
         }
+
+        const textNode = insertAfter(document.createTextNode(''), smile);
+        const range = document.createRange();
+        range.setStart(textNode, 0);
+        range.setEnd(textNode, 0);
+        selection.removeAllRanges();
+        selection.addRange(range);
+
+        // line.normalize();
     }
 
 
@@ -270,7 +291,6 @@
                         innerElem.removeAttribute('style')
                         continue;
                     }
-                    console.log(innerElem)
                     elem.insertBefore(document.createTextNode(innerElem.textContent), innerElem)
                     innerElem.remove();
                 }
@@ -337,13 +357,11 @@
      * @param {MouseEvent} e
      */
     textBlock.onmousedown = (e) => {
-        console.log(e)
         const style = window.getComputedStyle(textBlock);
         const shiftX = e.x - parseInt(style.left, 10);
         const shiftY = e.y - parseInt(style.top, 10);
 
         document.onmousemove = (e) => {
-            console.log(e)
             textBlock.style.left = (e.x - shiftX).toString() + 'px';
             textBlock.style.top = (e.y - shiftY).toString() + 'px';
         }
