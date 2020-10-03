@@ -158,10 +158,31 @@
 
             if (e.key === 'Enter') {
                 e.preventDefault();
+                const fragment = document.createDocumentFragment();
+
                 const newLine = createLine();
+                if (isTextNode(anchorNode)) {
+                    if (anchorNode.textContent.length !== selection.anchorOffset) {
+                        newLine.appendChild(document.createTextNode(anchorNode.textContent.substr(selection.anchorOffset)));
+                        anchorNode.textContent = anchorNode.textContent.substr(0, selection.anchorOffset)
+                    }
+                    while (anchorNode.nextSibling) {
+                        fragment.appendChild(anchorNode.nextSibling)
+                    }
+                } else if (anchorNode === e.target) {
+                    if (selection.anchorOffset === 0) {
+                    } else {
+                        const dividerElem = anchorNode.childNodes[selection.anchorOffset - 1];
+                        while (dividerElem.nextSibling) {
+                            fragment.appendChild(dividerElem.nextSibling)
+                        }
+                    }
+                }
+
+                newLine.appendChild(fragment);
                 insertAfter(newLine, line);
-                doDirt();
                 newLine.focus();
+                doDirt();
             }
         });
 
@@ -171,7 +192,7 @@
                 selectElem.oninput = oninput;
             });
         })((e) => {
-            const div = e.target;
+            const line = e.target;
             console.log(e)
         });
 
@@ -197,9 +218,8 @@
         const smile = Object.assign(document.createElement('img'), {
             className: 'smile',
             src: e.target.src
-        })
-        // editableDiv.appendChild(img);
-        pasteSmile(smile)
+        });
+        pasteSmile(smile);
     }
 
 
@@ -334,7 +354,7 @@
         }
     }
 
-</script>
+</script>asdf
 
 <script src="html2canvas.js"></script>
 <script src="download.js"></script>
