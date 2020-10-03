@@ -113,18 +113,20 @@
                 selectElem.onkeydown = onkeydown;
             });
         })((e) => {
-            console.log(e);
-            console.log(e.key);
-            if (e.key === 'Backspace') {
-                const selection = window.getSelection();
-                const anchorNode = selection.anchorNode;
-                console.log(selection)
-                console.log(anchorNode)
+            if (![8, 13, 46].includes(e.keyCode)) {
+                return;
+            }
 
-                if ((anchorNode === e.target || !anchorNode.previousSibling) && selection.anchorOffset === 0) {
-                    console.log('todo');
+            const line = e.target;
+            const selection = window.getSelection();
+            const anchorNode = selection.anchorNode;
+
+            // чинит то что последний текстовый элемент может быть "" и все стопорить
+            line.normalize();
+
+            if (e.key === 'Backspace') {
+                if ((anchorNode === line || !anchorNode.previousSibling) && selection.anchorOffset === 0) {
                     e.preventDefault();
-                    const line = e.target;
                     const prevLine = line.previousElementSibling;
                     if (prevLine) {
                         const focusElem = prevLine.lastChild;
@@ -140,41 +142,26 @@
                         prevLine.normalize();
                     }
                 }
-                // line.focus();
             }
 
             if (e.key === 'Delete') {
-                const selection = window.getSelection();
-                const anchorNode = selection.anchorNode;
-
-                // чинит то что последний текстовый элемент может быть "" и все стопорить
-                // e.target.normalize();
-
                 const bool2 = isTextNode(anchorNode) && !anchorNode.nextSibling && anchorNode.textContent.length === selection.anchorOffset;
-
-                if ((anchorNode === e.target && selection.anchorOffset !== 0) || bool2) {
-                    console.log('Delete LINE');
+                if ((anchorNode === line && selection.anchorOffset !== 0) || bool2) {
                     e.preventDefault();
-                    const line = e.target;
-
                     const nextLine = line.nextElementSibling;
                     if (nextLine) {
                         splitLines(line, nextLine);
                     }
+                    line.normalize();
                 }
             }
 
-
             if (e.key === 'Enter') {
                 e.preventDefault();
-                const div = e.target;
-                console.log(div)
-                console.log(div)
-                console.log(div)
-                const line = createLine();
-                insertAfter(line, div);
+                const newLine = createLine();
+                insertAfter(newLine, line);
                 doDirt();
-                line.focus();
+                newLine.focus();
             }
         });
 
