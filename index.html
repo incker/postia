@@ -56,19 +56,6 @@
             </button>
         </div>
 
-        <div>
-            <button class="btn-clean">
-                clean
-            </button>
-            <button class="btn-apply">
-                apply
-            </button>
-        </div>
-
-        <div class="editable-div" contenteditable="true">
-            Этот текст может быть отредактирован пользователем.
-        </div>
-
         <div class="smile-piker">
             <img class="smile-icon" src="emojipedia/apple/0000.jpg">
         </div>
@@ -102,12 +89,9 @@
         line.appendChild(fragment);
     }
 
-    const doDirt = () => {
-        ((onkeydown) => {
-            document.querySelectorAll('.line.editable-div').forEach((selectElem) => {
-                selectElem.onkeydown = onkeydown;
-            });
-        })((e) => {
+
+    const lineMethods = {
+        onkeydown: (e) => {
             if (![8, 13, 46].includes(e.keyCode)) {
                 return;
             }
@@ -180,13 +164,8 @@
                 newLine.focus();
                 doDirt();
             }
-        });
-
-        ((onpaste) => {
-            document.querySelectorAll('.line.editable-div').forEach((selectElem) => {
-                selectElem.onpaste = onpaste;
-            });
-        })((e) => {
+        },
+        onpaste: (e) => {
             const textHtml = e.clipboardData.getData('text/html');
             if (!textHtml) {
                 // если нет текста html значит текст без форматирования и смайлов
@@ -224,13 +203,18 @@
             if (!selection.rangeCount) return false;
             selection.deleteFromDocument();
             selection.getRangeAt(0).insertNode(fragment);
-        });
+            e.target.normalize();
+        },
+    }
 
+    const doDirt = () => {
+        document.querySelectorAll('.line.editable-div').forEach((selectElem) => {
+            Object.assign(selectElem, lineMethods);
+        });
     }
     doDirt();
 
     const smilePiker = document.querySelector('.smile-piker');
-
 
     (() => {
         smilePiker.textContent = '';
@@ -266,8 +250,6 @@
 
 
 <script>
-    const editableDiv = document.body.querySelector('.editable-div');
-
     const pasteSmile = (smile) => {
         const selection = window.getSelection();
         const anchorNode = selection.anchorNode;
@@ -310,35 +292,7 @@
         selection.removeAllRanges();
         selection.addRange(range);
 
-        // line.normalize();
-    }
-
-
-    const clean = () => {
-        for (const elem of editableDiv.children) {
-            if (elem.tagName.toLowerCase() === 'img') {
-                elem.removeAttribute('style')
-                continue;
-            }
-
-            if (elem.tagName.toLowerCase() === 'div') {
-                elem.removeAttribute('class')
-                elem.removeAttribute('style')
-                for (const innerElem of elem.children) {
-                    if (innerElem.tagName.toLowerCase() === 'img') {
-                        innerElem.removeAttribute('style')
-                        continue;
-                    }
-                    elem.insertBefore(document.createTextNode(innerElem.textContent), innerElem)
-                    innerElem.remove();
-                }
-                continue;
-            }
-
-            editableDiv.insertBefore(document.createTextNode(elem.textContent), elem)
-            elem.remove();
-        }
-        editableDiv.normalize()
+        line.normalize();
     }
 
 
@@ -353,9 +307,6 @@
                 throw 'not a text or element node';
         }
     }
-
-
-    document.querySelector('.btn-clean').onclick = clean;
 
 
     const textBlock = document.querySelector('.text-block');
