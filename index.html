@@ -103,7 +103,6 @@
     }
 
     const doDirt = () => {
-
         ((onkeydown) => {
             document.querySelectorAll('.line.editable-div').forEach((selectElem) => {
                 selectElem.onkeydown = onkeydown;
@@ -183,14 +182,48 @@
             }
         });
 
-        // todo onpaste instead oninput??
-        ((oninput) => {
+        ((onpaste) => {
             document.querySelectorAll('.line.editable-div').forEach((selectElem) => {
-                selectElem.oninput = oninput;
+                selectElem.onpaste = onpaste;
             });
         })((e) => {
-            const line = e.target;
-            console.log(e)
+            const textHtml = e.clipboardData.getData('text/html');
+            if (!textHtml) {
+                // если нет текста html значит текст без форматирования и смайлов
+                return;
+            }
+
+            e.preventDefault();
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(textHtml, 'text/html');
+
+            const fragment = document.createDocumentFragment();
+            const clean = (elem) => {
+                if (elem.tagName === 'IMG' && elem.classList.contains('smile')) {
+                    fragment.appendChild(createSmile(elem.src));
+                    return;
+                }
+                let child;
+                while ((child = elem.firstChild)) {
+                    switch (child.nodeType) {
+                        case 3: // text node
+                            fragment.appendChild(child);
+                            break;
+                        case 1: // element
+                            clean(child);
+                            child.remove();
+                            break;
+                        default:
+                            child.remove();
+                    }
+                }
+            }
+
+            [...htmlDoc.body.children].forEach(clean);
+            const selection = window.getSelection();
+            if (!selection.rangeCount) return false;
+            selection.deleteFromDocument();
+            selection.getRangeAt(0).insertNode(fragment);
         });
 
     }
@@ -210,12 +243,17 @@
         }
     })()
 
+
     smilePiker.onclick = (e) => {
-        const smile = Object.assign(document.createElement('img'), {
+        pasteSmile(createSmile(e.target.src));
+    }
+
+
+    const createSmile = (src) => {
+        return Object.assign(document.createElement('img'), {
             className: 'smile',
-            src: e.target.src
+            src: src,
         });
-        pasteSmile(smile);
     }
 
 
